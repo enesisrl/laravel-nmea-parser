@@ -1,0 +1,27 @@
+{
+    "name": "enesisrl/laravel-nmea-parser",
+    "description": "A Laravel package to parse NMEA strings",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Enesisrl\\LaravelNmeaParser\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Enesi srl"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "YourEnesisrlNamespace\\LaravelNmeaParser\\Providers\\NmeaParserServiceProvider"
+            ],
+            "aliases": {
+                "NmeaParser": "YourEnesisrlNamespace\\LaravelNmeaParser\\Facades\\NmeaParser"
+            }
+        }
+    },
+    "require": {}
+}
