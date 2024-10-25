@@ -2,6 +2,8 @@
 
 namespace Enesisrl\LaravelNmeaParser\Classes;
 
+use Illuminate\Support\Carbon;
+
 class NmeaParser
 {
     /**
