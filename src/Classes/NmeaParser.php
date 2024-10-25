@@ -5,69 +5,124 @@ namespace Enesisrl\LaravelNmeaParser\Classes;
 class NmeaParser
 {
     /**
-     * Analizza una stringa NMEA e restituisce tutti i dati disponibili.
+     * Estrae i dati GPS dalla stringa NMEA.
      *
      * @param string $nmeaString
-     * @return array Associative array containing all data fields
-     * @throws \Exception
+     * @return array
      */
-    public function parseAllData(string $nmeaString): array
+    public function parse(string $nmeaString): array
     {
-        // Split string into parts
-        $segments = explode(',', $nmeaString);
-
-        // Check if the message is valid
-        if (count($segments) < 15) {
-            throw new \Exception("Stringa NMEA non valida o incompleta.");
-        }
-
-        // Extract and convert all necessary data
-        return [
-            'time' => $this->parseTime($segments[1]), // Ora UTC
-            'latitude' => $this->nmeaToDecimal($segments[2], $segments[3]), // Latitudine in decimale
-            'longitude' => $this->nmeaToDecimal($segments[4], $segments[5]), // Longitudine in decimale
-            'fix_quality' => (int)$segments[6], // Qualità del segnale GPS
-            'satellites' => (int)$segments[7], // Numero di satelliti
-            'horizontal_dilution' => (float)$segments[8], // Precisione orizzontale
-            'altitude' => (float)$segments[9], // Altitudine in metri
-            'height_geoid' => (float)$segments[11] // Altezza sopra il geoid
+        $data = [
+            'date' => null,
+            'time' => null,
+            'latitude' => null,
+            'longitude' => null
         ];
-    }
 
-    /**
-     * Converte coordinate NMEA in formato decimale.
-     *
-     * @param string $coordinate
-     * @param string $direction
-     * @return float
-     */
-    private function nmeaToDecimal(string $coordinate, string $direction): float
-    {
-        $degrees = (int)(substr($coordinate, 0, 2));
-        $minutes = (float)(substr($coordinate, 2));
+        $lines = explode("\n", $nmeaString);
 
-        $decimal = $degrees + ($minutes / 60);
-
-        if ($direction === 'S' || $direction === 'W') {
-            $decimal *= -1;
+        foreach ($lines as $line) {
+            if (strpos($line, '$GPRMC') !== false) {
+                $this->parseGprmc($line, $data);
+            } elseif (strpos($line, '$GPGGA') !== false) {
+                $this->parseGpgga($line, $data);
+            }
         }
 
-        return $decimal;
+        return $data;
     }
 
     /**
-     * Converte il campo orario NMEA in formato leggibile (HH:MM:SS).
+     * Parser per le stringhe GPRMC.
      *
-     * @param string $time
-     * @return string
+     * @param string $line
+     * @param array $data
      */
-    private function parseTime(string $time): string
+    private function parseGprmc(string $line, array &$data): void
     {
-        $hours = substr($time, 0, 2);
-        $minutes = substr($time, 2, 2);
-        $seconds = substr($time, 4, 2);
+        $parts = explode(',', $line);
 
-        return "$hours:$minutes:$seconds";
+        if (count($parts) >= 10) {
+            // Ora
+            $data['time'] = $this->parseTime($parts[1]);
+
+            // Data
+            $data['date'] = $this->parseDate($parts[9]);
+
+            // Latitudine e longitudine
+            $data['latitude'] = $this->parseCoordinate($parts[3], $parts[4]);
+            $data['longitude'] = $this->parseCoordinate($parts[5], $parts[6]);
+        }
+    }
+
+    /**
+     * Parser per le stringhe GPGGA.
+     *
+     * @param string $line
+     * @param array $data
+     */
+    private function parseGpgga(string $line, array &$data): void
+    {
+        $parts = explode(',', $line);
+
+        if (count($parts) >= 6) {
+            $data['latitude'] = $this->parseCoordinate($parts[2], $parts[3]);
+            $data['longitude'] = $this->parseCoordinate($parts[4], $parts[5]);
+        }
+    }
+
+    /**
+     * Parse time in formato HHMMSS.
+     *
+     * @param string $timeString
+     * @return string|null
+     */
+    private function parseTime(string $timeString): ?string
+    {
+        if (strlen($timeString) >= 6) {
+            $hours = substr($timeString, 0, 2);
+            $minutes = substr($timeString, 2, 2);
+            $seconds = substr($timeString, 4, 2);
+            return "$hours:$minutes:$seconds";
+        }
+        return null;
+    }
+
+    /**
+     * Parse date in formato DDMMYY.
+     *
+     * @param string $dateString
+     * @return string|null
+     */
+    private function parseDate(string $dateString): ?string
+    {
+        if (strlen($dateString) === 6) {
+            $day = substr($dateString, 0, 2);
+            $month = substr($dateString, 2, 2);
+            $year = '20' . substr($dateString, 4, 2);
+            return Carbon::createFromDate($year, $month, $day)->toDateString();
+        }
+        return null;
+    }
+
+    /**
+     * Parse della coordinata NMEA.
+     *
+     * @param string $coordinateString
+     * @param string $direction
+     * @return float|null
+     */
+    private function parseCoordinate(string $coordinateString, string $direction): ?float
+    {
+        if (empty($coordinateString)) {
+            return null;
+        }
+
+        $degrees = (int)substr($coordinateString, 0, 2);
+        $minutes = (float)substr($coordinateString, 2) / 60.0;
+        $coordinate = $degrees + $minutes;
+
+        return ($direction === 'S' || $direction === 'W') ? -$coordinate : $coordinate;
     }
 
 }
