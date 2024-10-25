@@ -43,8 +43,8 @@ class NmeaParser
      */
     private function nmeaToDecimal(string $coordinate, string $direction): float
     {
-        $degrees = substr($coordinate, 0, 2);
-        $minutes = substr($coordinate, 2);
+        $degrees = 1*substr($coordinate, 0, 2);
+        $minutes = 1*substr($coordinate, 2);
 
         $decimal = $degrees + ($minutes / 60);
 
