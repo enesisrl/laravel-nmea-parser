@@ -16,10 +16,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "YourEnesisrlNamespace\\LaravelNmeaParser\\Providers\\NmeaParserServiceProvider"
+                "EnesisrlNamespace\\LaravelNmeaParser\\Providers\\NmeaParserServiceProvider"
             ],
             "aliases": {
-                "NmeaParser": "YourEnesisrlNamespace\\LaravelNmeaParser\\Facades\\NmeaParser"
+                "NmeaParser": "EnesisrlNamespace\\LaravelNmeaParser\\Facades\\NmeaParser"
             }
         }
     },
