@@ -120,11 +120,16 @@ class NmeaParser
             return null;
         }
 
-        $degrees = (int)substr($coordinateString, 0, 2);
-        $minutes = (float)substr($coordinateString, 2) / 60.0;
+        // Determina se è latitudine o longitudine in base alla lunghezza
+        $isLongitude = strlen(explode('.', $coordinateString)[0]) > 4;
+        $degreeLength = $isLongitude ? 3 : 2;
+
+        $degrees = (int)substr($coordinateString, 0, $degreeLength);
+        $minutes = (float)substr($coordinateString, $degreeLength) / 60.0;
         $coordinate = $degrees + $minutes;
 
         return ($direction === 'S' || $direction === 'W') ? -$coordinate : $coordinate;
     }
+
 
 }
