@@ -131,5 +131,37 @@ class NmeaParser
         return ($direction === 'S' || $direction === 'W') ? -$coordinate : $coordinate;
     }
 
+    /**
+     * Calcola la distanza in metri tra due punti geografici
+     * sulla superficie della Terra utilizzando la formula dell'Haversine.
+     *
+     * @param float $lat1 Latitudine del primo punto in gradi decimali.
+     * @param float $lon1 Longitudine del primo punto in gradi decimali.
+     * @param float $lat2 Latitudine del secondo punto in gradi decimali.
+     * @param float $lon2 Longitudine del secondo punto in gradi decimali.
+     *
+     * @return float Distanza tra i due punti in metri.
+     */
+
+    public function haversine($lat1, $lon1, $lat2, $lon2): float
+    {
+        $earthRadius = 6371000; // Raggio della Terra in metri
+
+        $lat1 = deg2rad($lat1);
+        $lon1 = deg2rad($lon1);
+        $lat2 = deg2rad($lat2);
+        $lon2 = deg2rad($lon2);
+
+        $dlat = $lat2 - $lat1;
+        $dlon = $lon2 - $lon1;
+
+        $a = sin($dlat / 2) * sin($dlat / 2) +
+            cos($lat1) * cos($lat2) *
+            sin($dlon / 2) * sin($dlon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c; // Distanza in metri
+    }
 
 }
